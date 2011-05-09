@@ -1,0 +1,45 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>parse timeline</title>
+<script src="static/jquery.js" type="text/javascript"></script>
+<script type="text/javascript">
+$(function() {
+        $("dd:not(:first)").hide();
+        $("dt").click(function() {
+            $("dd:visible").slideUp("slow");
+            $(this).next().slideDown("slow");
+            return false;
+            });
+        });
+</script>
+</head>
+
+<body>
+<h1><a href="/">parse timeline</a></h1></div>
+
+[% IF commit_logs -%]
+<dl>
+  [% FOREACH author = commit_logs %]
+  <dt> [% author.name | html %]</dt>
+  <dd>
+    <ul>
+      [% FOREACH entry = author.entries %]
+      <li><a class="commit" href="[% entry.link | html %]" title="[% entry.title | html %]">
+      [% entry.title | html %]
+      </a></li>
+      <li>[% entry.timestamp | html %]</li>
+      <li>[% entry.comment | html %]</li>
+      [% END %]
+    </ul>
+  </dd>
+  [% END -%]
+</dl>
+[% END -%]
+</div>
+
+</body>
+</html>
+
