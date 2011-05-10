@@ -25,15 +25,13 @@ $(function() {
   [% FOREACH author = commit_logs %]
   <dt> [% author.name | html %]</dt>
   <dd>
+    [% FOREACH entry = author.entries %]
+    <a class="commit" href="[% entry.link | html %]">[% entry.title | html %]</a>
     <ul>
-      [% FOREACH entry = author.entries %]
-      <li><a class="commit" href="[% entry.link | html %]" title="[% entry.title | html %]">
-      [% entry.title | html %]
-      </a></li>
       <li>[% entry.timestamp | html %]</li>
       <li>[% entry.comment | html %]</li>
-      [% END %]
     </ul>
+    [% END %]
   </dd>
   [% END -%]
 </dl>
