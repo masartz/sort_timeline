@@ -8,6 +8,8 @@ use XML::Feed;
 use Encode;
 
 my $template_config = { INCLUDE_PATH => './templates' };
+my $config = require "config.pl";
+
 my $app = sub {
     my $env = shift;
     my $req = Plack::Request->new($env);
@@ -32,17 +34,21 @@ sub _render {
 
 sub _parse_timeline {
     my $feed = XML::Feed->parse(
-        URI->new('http://coderepos.org/share/timeline?ticket=on&changeset=on&milestone=on&wiki=on&max=50&daysback=90&format=rss') )
+        URI->new( $config->{feed_url} ) )
       or return [];
     my @timelines;
     for my $entry ( $feed->entries() ) {
+
+        my $comment = $entry->content->body;
+        $comment =~ s!^<p>!!;
+        $comment =~ s!</p>$!!;
 
         my %row = (
             title      => $entry->title,
             link       => $entry->link, 
             author     => $entry->author,
             timestamp  => $entry->issued->datetime,
-            comment    => $entry->content->body,
+            comment    => $comment,
         );
         %row = map { $_ => Encode::encode_utf8( $row{$_} ) } keys %row;
         
