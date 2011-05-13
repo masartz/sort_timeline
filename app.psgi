@@ -1,11 +1,12 @@
 use strict;
 use warnings;
-    
+
 use Plack::Builder;
 use Plack::Request;
 use Template;
-use XML::Feed;
-use Encode;
+
+use lib './lib';
+use MyApp::Parser;
 
 my $template_config = { INCLUDE_PATH => './templates' };
 my $config = require "config.pl";
@@ -14,8 +15,20 @@ my $app = sub {
     my $env = shift;
     my $req = Plack::Request->new($env);
     
-    my $timelines   = _parse_timeline();
-    my $commit_logs = _format_log( $timelines );
+    my $timelines;
+    if ( $req->path eq '/feed' ){
+        $timelines = MyApp::Parser::get_from_feed(
+            $config->{feed_url}
+        );
+    }
+    elsif( $req->path eq 'log' ){
+#        $timelines   = MyApp::Parser::get_from_log();
+    }
+    else{
+        return [ 404, [ "Content-Type" => "text/plain" ], ["Not Found"] ];
+    }
+
+    my $commit_logs = _format_commit_log( $timelines );
     my $args = { commit_logs => $commit_logs } if defined $commit_logs;
     
     my $res = $req->new_response(200);
@@ -32,32 +45,8 @@ sub _render {
     return $out;
 }
 
-sub _parse_timeline {
-    my $feed = XML::Feed->parse(
-        URI->new( $config->{feed_url} ) )
-      or return [];
-    my @timelines;
-    for my $entry ( $feed->entries() ) {
 
-        my $comment = $entry->content->body;
-        $comment =~ s!^<p>!!;
-        $comment =~ s!</p>$!!;
-
-        my %row = (
-            title      => $entry->title,
-            link       => $entry->link, 
-            author     => $entry->author,
-            timestamp  => $entry->issued->datetime,
-            comment    => $comment,
-        );
-        %row = map { $_ => Encode::encode_utf8( $row{$_} ) } keys %row;
-        
-        push @timelines , \%row;
-    }
-    return \@timelines;
-}
-
-sub _format_log{
+sub _format_commit_log{
     my $timeline = shift;
 
     my %logs;
